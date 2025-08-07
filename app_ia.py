@@ -249,16 +249,8 @@ def add_consultor_icon():
                         font-size: 0.95rem;
                         line-height: 1.4;
                     ">
-                        👆 <strong>Clique para acessar<br/>o Prof. Tilap-IA!</strong>
+                        👆 <strong>Clique para acessar o consultor virtual<br/>Dr. Tilap-IA!</strong>
                     </p>
-                    # <p style="
-                    #     color: #64748b; 
-                    #     font-size: 0.8rem; 
-                    #     margin: 0.3rem 0 0 0;
-                    #     font-style: italic;
-                    # ">
-                    #     ✅ Imagem carregada: {image_found_path}
-                    # </p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1189,111 +1181,110 @@ def display_advanced_statistics(data, analysis):
                         f"{color} **{var1}** vs **{var2}**: Correlação {strength} {direction} (r = {corr_value:.3f})"
                     )
 
-                    if strong_correlations:
-                        for corr_text in strong_correlations:
-                            st.write(corr_text)
-                    else:
-                        st.info("ℹ️ Não foram encontradas correlações significativas (|r| > 0.3)")
+            # CORREÇÃO CRÍTICA: Indentação corrigida aqui
+            if strong_correlations:
+                for corr_text in strong_correlations:
+                    st.write(corr_text)
+            else:
+                st.info("ℹ️ Não foram encontradas correlações significativas (|r| > 0.3)")
 
-            # Regressão linear
-            if analysis and 'regression' in analysis:
-                st.subheader("📈 Análise de Regressão: Ração vs Peso")
+    # Regressão linear - AGORA NO CONTEXTO CORRETO
+    if analysis and 'regression' in analysis:
+        st.subheader("📈 Análise de Regressão: Ração vs Peso")
 
-                reg = analysis['regression']
+        reg = analysis['regression']
 
-                col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns(3)
 
-                with col1:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.metric("📊 Coeficiente Angular", f"{reg['slope']:.4f}")
-                    st.markdown('</div>', unsafe_allow_html=True)
+        with col1:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.metric("📊 Coeficiente Angular", f"{reg['slope']:.4f}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                with col2:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.metric("📈 Intercepto", f"{reg['intercept']:.4f}")
-                    st.markdown('</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.metric("📈 Intercepto", f"{reg['intercept']:.4f}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                with col3:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.metric("🎯 R² (Ajuste)", f"{reg['r2']:.3f}")
-                    st.markdown('</div>', unsafe_allow_html=True)
+        with col3:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.metric("🎯 R² (Ajuste)", f"{reg['r2']:.3f}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                # Gráfico de regressão
-                fig_reg = go.Figure()
+        # Gráfico de regressão
+        fig_reg = go.Figure()
 
-                # Pontos observados
-                fig_reg.add_trace(go.Scatter(
-                    x=reg['X'],
-                    y=reg['y'],
-                    mode='markers',
-                    name='Dados Observados',
-                    marker=dict(size=8, color='blue', opacity=0.6)
-                ))
+        # Pontos observados
+        fig_reg.add_trace(go.Scatter(
+            x=reg['X'],
+            y=reg['y'],
+            mode='markers',
+            name='Dados Observados',
+            marker=dict(size=8, color='blue', opacity=0.6)
+        ))
 
-                # Linha de regressão
-                fig_reg.add_trace(go.Scatter(
-                    x=reg['X'],
-                    y=reg['predictions'],
-                    mode='lines',
-                    name=f'Regressão (R² = {reg["r2"]:.3f})',
-                    line=dict(color='red', width=3)
-                ))
+        # Linha de regressão
+        fig_reg.add_trace(go.Scatter(
+            x=reg['X'],
+            y=reg['predictions'],
+            mode='lines',
+            name=f'Regressão (R² = {reg["r2"]:.3f})',
+            line=dict(color='red', width=3)
+        ))
 
-                fig_reg.update_layout(
-                    title=f"Regressão Linear: Peso = {reg['slope']:.4f} × Ração + {reg['intercept']:.4f}",
-                    xaxis_title="Ração Consumida (kg)",
-                    yaxis_title="Peso Médio (kg)",
-                    template="plotly_white",
-                    height=500
-                )
+        fig_reg.update_layout(
+            title=f"Regressão Linear: Peso = {reg['slope']:.4f} × Ração + {reg['intercept']:.4f}",
+            xaxis_title="Ração Consumida (kg)",
+            yaxis_title="Peso Médio (kg)",
+            template="plotly_white",
+            height=500
+        )
 
-                st.plotly_chart(fig_reg, use_container_width=True)
+        st.plotly_chart(fig_reg, use_container_width=True)
 
-                # Interpretação da regressão
-                st.info(f"""
-                    **Interpretação da Regressão:**
-                    - Para cada 1 kg de ração adicional, o peso aumenta em média {reg['slope']:.4f} kg
-                    - O modelo explica {reg['r2'] * 100:.1f}% da variação no peso dos peixes
-                    - {"Modelo com bom ajuste" if reg['r2'] > 0.7 else "Modelo com ajuste moderado" if reg['r2'] > 0.5 else "Modelo com ajuste fraco"}
-                    """)
+        # Interpretação da regressão
+        st.info(f"""
+        **Interpretação da Regressão:**
+        - Para cada 1 kg de ração adicional, o peso aumenta em média {reg['slope']:.4f} kg
+        - O modelo explica {reg['r2'] * 100:.1f}% da variação no peso dos peixes
+        - {"Modelo com bom ajuste" if reg['r2'] > 0.7 else "Modelo com ajuste moderado" if reg['r2'] > 0.5 else "Modelo com ajuste fraco"}
+        """)
 
-            # Estatísticas detalhadas
-            if analysis and 'peso_statistics' in analysis:
-                st.subheader("📋 Estatísticas Detalhadas do Peso")
+    # Estatísticas detalhadas
+    if analysis and 'peso_statistics' in analysis:
+        st.subheader("📋 Estatísticas Detalhadas do Peso")
 
-                peso_stats = analysis['peso_statistics']
+        peso_stats = analysis['peso_statistics']
 
-                col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4 = st.columns(4)
 
-                with col1:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.write(f"**Média:** {peso_stats['mean']:.3f} kg")
-                    st.write(f"**Mediana:** {peso_stats.get('median', 0):.3f} kg")
-                    st.write(f"**Desvio Padrão:** {peso_stats['std']:.3f} kg")
-                    st.markdown('</div>', unsafe_allow_html=True)
+        with col1:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.write(f"**Média:** {peso_stats['mean']:.3f} kg")
+            st.write(f"**Mediana:** {peso_stats.get('median', 0):.3f} kg")
+            st.write(f"**Desvio Padrão:** {peso_stats['std']:.3f} kg")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                with col2:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.write(f"**Mínimo:** {peso_stats['min']:.3f} kg")
-                    st.write(f"**Máximo:** {peso_stats['max']:.3f} kg")
-                    st.write(f"**Amplitude:** {peso_stats.get('range', 0):.3f} kg")
-                    st.markdown('</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.write(f"**Mínimo:** {peso_stats['min']:.3f} kg")
+            st.write(f"**Máximo:** {peso_stats['max']:.3f} kg")
+            st.write(f"**Amplitude:** {peso_stats.get('range', 0):.3f} kg")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                with col3:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.write(f"**Q1 (25%):** {peso_stats.get('q25', 0):.3f} kg")
-                    st.write(f"**Q3 (75%):** {peso_stats.get('q75', 0):.3f} kg")
-                    st.write(f"**IQR:** {peso_stats.get('iqr', 0):.3f} kg")
-                    st.markdown('</div>', unsafe_allow_html=True)
+        with col3:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.write(f"**Q1 (25%):** {peso_stats.get('q25', 0):.3f} kg")
+            st.write(f"**Q3 (75%):** {peso_stats.get('q75', 0):.3f} kg")
+            st.write(f"**IQR:** {peso_stats.get('iqr', 0):.3f} kg")
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                with col4:
-                    st.markdown('<div class="stat-card">', unsafe_allow_html=True)
-                    st.write(f"**Amostras:** {peso_stats['count']}")
-                    st.write("**Distribuição:**")
-                    st.write("Normal" if analysis.get('normality_test', {}).get('shapiro', {}).get('is_normal',
-                                                                                                   False) else "Não-Normal")
-                    st.markdown('</div>', unsafe_allow_html=True)
-
+        with col4:
+            st.markdown('<div class="stat-card">', unsafe_allow_html=True)
+            st.write(f"**Amostras:** {peso_stats['count']}")
+            st.write("**Distribuição:**")
+            st.write("Normal" if analysis.get('normality_test', {}).get('shapiro', {}).get('is_normal', False) else "Não-Normal")
+            st.markdown('</div>', unsafe_allow_html=True)
 
 def display_ai_assistant():
     """Assistente de IA - VERSÃO CORRIGIDA"""
