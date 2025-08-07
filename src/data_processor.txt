@@ -1,0 +1,379 @@
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import streamlit as st
+
+
+class DataProcessor:
+    def __init__(self, correction_factor=1.0):
+        self.correction_factor = correction_factor
+
+    def process_integrated_data(self, raw_fish_df, raw_feed_df, start_date, end_date, selected_tanks):
+        """Processa e integra dados de peixes e ração"""
+        try:
+            st.info("🔄 Iniciando processamento dos dados...")
+
+            # Limpar e validar dados brutos
+            fish_clean = self._clean_fish_data(raw_fish_df.copy())
+            feed_clean = self._clean_feed_data(raw_feed_df.copy())
+
+            if fish_clean is None or feed_clean is None:
+                st.error("❌ Falha na limpeza dos dados")
+                return None
+
+            # Filtrar por período
+            fish_filtered = self._filter_by_date(fish_clean, start_date, end_date)
+            feed_filtered = self._filter_by_date(feed_clean, start_date, end_date)
+
+            st.write(f"**Dados após filtro de data:**")
+            st.write(f"- Peixes: {len(fish_filtered)} registros")
+            st.write(f"- Ração: {len(feed_filtered)} registros")
+
+            if fish_filtered.empty or feed_filtered.empty:
+                st.warning("⚠️ Nenhum dado encontrado após o filtro de período selecionado.")
+                return pd.DataFrame()
+
+            # Filtrar por tanques (se aplicável)
+            if selected_tanks and 'tanque' in feed_filtered.columns:
+                feed_filtered = feed_filtered[feed_filtered['tanque'].isin(selected_tanks)]
+                st.write(f"**Dados após filtro de tanques:** {len(feed_filtered)} registros")
+
+            if feed_filtered.empty:
+                st.warning("⚠️ Nenhum dado encontrado após o filtro de tanques selecionado.")
+                return pd.DataFrame()
+
+            # Integrar dados
+            integrated_data = self._integrate_data(fish_filtered, feed_filtered)
+
+            if integrated_data is not None:
+                st.success("✅ Processamento concluído com sucesso!")
+                st.write(f"**Dados finais:** {len(integrated_data)} registros")
+                st.write(f"**Colunas finais:** {list(integrated_data.columns)}")
+
+            return integrated_data
+
+        except Exception as e:
+            st.error(f"⚠️ Erro no processamento de dados: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+            return None
+
+    def _clean_fish_data(self, df):
+        """Limpa e padroniza os dados dos peixes usando dados reais da planilha"""
+        try:
+            st.write("🐟 Processando dados dos peixes...")
+            st.write(f"**Colunas originais:** {list(df.columns)}")
+
+            # Verificar se as colunas esperadas existem
+            expected_columns = ['id', 'data', 'hora', 'tanque', 'largura', 'altura', 'temperatura', 'ph', 'o2']
+            missing_columns = [col for col in expected_columns if col not in df.columns]
+
+            if missing_columns:
+                st.warning(f"⚠️ Colunas ausentes: {missing_columns}")
+
+            # Verificar colunas obrigatórias
+            if 'largura' not in df.columns or 'altura' not in df.columns:
+                st.error("❌ Colunas 'largura' ou 'altura' não encontradas!")
+                return None
+
+            # Converter tipos de dados
+            df['data'] = pd.to_datetime(df['data'], errors='coerce')
+            df['largura'] = pd.to_numeric(df['largura'], errors='coerce')
+            df['altura'] = pd.to_numeric(df['altura'], errors='coerce')
+
+            # Converter dados ambientais REAIS da planilha
+            if 'temperatura' in df.columns:
+                df['temperatura'] = pd.to_numeric(df['temperatura'], errors='coerce')
+                st.write(f"**Temperatura - Range:** {df['temperatura'].min():.1f}°C a {df['temperatura'].max():.1f}°C")
+
+            if 'ph' in df.columns:
+                df['ph'] = pd.to_numeric(df['ph'], errors='coerce')
+                st.write(f"**pH - Range:** {df['ph'].min():.1f} a {df['ph'].max():.1f}")
+
+            if 'o2' in df.columns:
+                df['o2'] = pd.to_numeric(df['o2'], errors='coerce')
+                st.write(f"**O2 - Range:** {df['o2'].min():.1f} a {df['o2'].max():.1f} mg/L")
+
+            # Criar datetime combinando data e hora
+            if 'hora' in df.columns:
+                try:
+                    df['datetime'] = pd.to_datetime(
+                        df['data'].dt.strftime('%Y-%m-%d') + ' ' + df['hora'].astype(str),
+                        errors='coerce'
+                    )
+                except:
+                    df['datetime'] = df['data']
+                    st.warning("⚠️ Não foi possível combinar data e hora")
+            else:
+                df['datetime'] = df['data']
+
+            # Remover linhas com dados inválidos
+            original_len = len(df)
+            df = df.dropna(subset=['data', 'largura', 'altura'])
+            df = df[(df['largura'] > 0) & (df['altura'] > 0)]
+
+            st.write(f"**Linhas removidas:** {original_len - len(df)}")
+            st.write(f"**Linhas válidas:** {len(df)}")
+
+            if len(df) == 0:
+                st.error("❌ Nenhum dado válido após limpeza!")
+                return None
+
+            # Calcular peso estimado usando dados ambientais REAIS
+            st.write("🔄 Calculando peso estimado com dados ambientais reais...")
+            df['peso_estimado'] = self._estimate_weight_with_environment(
+                df['largura'],
+                df['altura'],
+                df.get('temperatura'),
+                df.get('ph'),
+                df.get('o2')
+            )
+
+            # Verificar se o peso foi calculado
+            st.write(f"**Peso estimado - Estatísticas:**")
+            st.write(f"- Min: {df['peso_estimado'].min():.3f} kg")
+            st.write(f"- Max: {df['peso_estimado'].max():.3f} kg")
+            st.write(f"- Média: {df['peso_estimado'].mean():.3f} kg")
+            st.write(f"- Desvio: {df['peso_estimado'].std():.3f} kg")
+
+            # Mostrar amostra final
+            st.write("**Amostra dos dados processados:**")
+            display_cols = ['data', 'tanque', 'largura', 'altura', 'peso_estimado']
+            if 'temperatura' in df.columns:
+                display_cols.extend(['temperatura', 'ph', 'o2'])
+            st.dataframe(df[display_cols].head())
+
+            return df
+
+        except Exception as e:
+            st.error(f"❌ Erro na limpeza dos dados dos peixes: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+            return None
+
+    def _clean_feed_data(self, df):
+        """Limpa e padroniza os dados de ração"""
+        try:
+            st.write("🍽️ Processando dados de ração...")
+            st.write(f"**Colunas de ração:** {list(df.columns)}")
+
+            # Verificar se as colunas esperadas existem
+            expected_columns = ['id', 'data', 'hora', 'tanque', 'peso', 'tipo']
+            missing_columns = [col for col in expected_columns if col not in df.columns]
+
+            if missing_columns:
+                st.warning(f"⚠️ Colunas de ração ausentes: {missing_columns}")
+
+            # Verificar colunas obrigatórias
+            if 'peso' not in df.columns:
+                st.error("❌ Coluna 'peso' não encontrada nos dados de ração!")
+                return None
+
+            # Converter tipos de dados
+            df['data'] = pd.to_datetime(df['data'], errors='coerce')
+            df['peso'] = pd.to_numeric(df['peso'], errors='coerce')
+
+            # Remover linhas com dados inválidos
+            original_len = len(df)
+            df = df.dropna(subset=['data', 'peso'])
+            df = df[df['peso'] >= 0]
+
+            st.write(f"**Linhas de ração removidas:** {original_len - len(df)}")
+            st.write(f"**Linhas de ração válidas:** {len(df)}")
+
+            # Agrupar por data e tanque para somar o peso total de ração
+            if 'tanque' in df.columns:
+                df_grouped = df.groupby(['data', 'tanque'])['peso'].sum().reset_index()
+            else:
+                df_grouped = df.groupby('data')['peso'].sum().reset_index()
+                df_grouped['tanque'] = 'Tanque Único'
+
+            df_grouped = df_grouped.rename(columns={'peso': 'total_racao'})
+
+            st.write("**Dados de ração agrupados:**")
+            st.dataframe(df_grouped.head())
+
+            return df_grouped
+
+        except Exception as e:
+            st.error(f"❌ Erro na limpeza dos dados de ração: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+            return None
+
+    def _filter_by_date(self, df, start_date, end_date):
+        """Filtra dados por período"""
+        if df.empty:
+            return df
+        df['data'] = pd.to_datetime(df['data'])
+        mask = (df['data'].dt.date >= start_date) & (df['data'].dt.date <= end_date)
+        return df[mask].copy()
+
+    def _integrate_data(self, fish_df, feed_df):
+        """Integra dados de peixes e ração"""
+        try:
+            st.write("🔗 Integrando dados...")
+
+            # Agrupar peixes por data e tanque, mantendo dados ambientais REAIS
+            agg_dict = {
+                'peso_estimado': ['mean', 'std', 'count', 'sum'],
+                'largura': 'mean',
+                'altura': 'mean'
+            }
+
+            # Adicionar dados ambientais se existirem
+            if 'temperatura' in fish_df.columns:
+                agg_dict['temperatura'] = 'mean'
+            if 'ph' in fish_df.columns:
+                agg_dict['ph'] = 'mean'
+            if 'o2' in fish_df.columns:
+                agg_dict['o2'] = 'mean'
+
+            fish_grouped = fish_df.groupby(['data', 'tanque']).agg(agg_dict).reset_index()
+
+            # Flatten column names
+            new_columns = ['data', 'tanque', 'peso_medio', 'peso_std', 'n_peixes', 'peso_total',
+                           'largura_media', 'altura_media']
+
+            # Adicionar colunas ambientais se existirem
+            if 'temperatura' in fish_df.columns:
+                new_columns.append('temperatura_media')
+            if 'ph' in fish_df.columns:
+                new_columns.append('ph_medio')
+            if 'o2' in fish_df.columns:
+                new_columns.append('o2_medio')
+
+            fish_grouped.columns = new_columns
+
+            st.write(f"**Peixes agrupados:** {len(fish_grouped)} registros")
+            st.dataframe(fish_grouped.head())
+
+            # Merge com dados de ração
+            integrated = pd.merge(fish_grouped, feed_df, on=['data', 'tanque'], how='left')
+
+            # Preencher valores ausentes de ração com 0
+            integrated['total_racao'] = integrated['total_racao'].fillna(0)
+
+            # Calcular eficiência alimentar
+            integrated['eficiencia_alimentar'] = integrated.apply(
+                lambda row: row['peso_total'] / row['total_racao'] if row['total_racao'] > 0 else 0,
+                axis=1
+            )
+
+            # Calcular consumo per capita
+            integrated['consumo_per_capita'] = integrated.apply(
+                lambda row: row['total_racao'] / row['n_peixes'] if row['n_peixes'] > 0 else 0,
+                axis=1
+            )
+
+            # Calcular índices de qualidade da água usando dados REAIS
+            if all(col in integrated.columns for col in ['temperatura_media', 'ph_medio', 'o2_medio']):
+                integrated['indice_qualidade_agua'] = self._calculate_water_quality_index(
+                    integrated['temperatura_media'],
+                    integrated['ph_medio'],
+                    integrated['o2_medio']
+                )
+                st.write("✅ Índice de qualidade da água calculado com dados reais")
+
+            # Preencher NaNs restantes
+            integrated = integrated.fillna(0)
+
+            st.write("**Dados integrados finais:**")
+            st.dataframe(integrated.head())
+
+            return integrated
+
+        except Exception as e:
+            st.error(f"❌ Erro na integração dos dados: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+            return None
+
+    def _estimate_weight_with_environment(self, largura, altura, temperatura=None, ph=None, o2=None):
+        """
+        Estimativa de peso considerando dados ambientais REAIS da planilha
+        """
+
+        # PARÂMETROS BASE (AJUSTAR CONFORME CALIBRAÇÃO)
+        densidade_peixe = 1.05  # kg/L
+        fator_forma = 0.7  # fator de conversão 2D -> 3D
+        fator_profundidade = 0.6  # profundidade estimada como % da largura
+
+        # Cálculo do volume estimado (em cm³)
+        profundidade_estimada = largura * fator_profundidade
+        volume_cm3 = largura * altura * profundidade_estimada * fator_forma
+
+        # Conversão para litros
+        volume_litros = volume_cm3 / 1000
+
+        # Peso base
+        peso_base = volume_litros * densidade_peixe * self.correction_factor
+
+        # Aplicar correções baseadas nos dados ambientais REAIS
+        fator_ambiental = 1.0
+
+        if temperatura is not None and not pd.isna(temperatura):
+            # Fator de correção para temperatura (tilápias: ótimo 26-30°C)
+            temp_otima = 28.0
+            desvio_temp = abs(temperatura - temp_otima)
+            if desvio_temp > 5:  # Fora da faixa ótima
+                fator_ambiental *= max(0.85, 1.0 - (desvio_temp - 5) * 0.02)
+
+        if ph is not None and not pd.isna(ph):
+            # Fator de correção para pH (tilápias: ótimo 6.5-8.5)
+            if ph < 6.0 or ph > 9.0:  # pH crítico
+                fator_ambiental *= 0.9
+            elif ph < 6.5 or ph > 8.5:  # pH subótimo
+                fator_ambiental *= 0.95
+
+        if o2 is not None and not pd.isna(o2):
+            # Fator de correção para oxigênio (tilápias: mínimo 3 mg/L, ótimo >5 mg/L)
+            if o2 < 3.0:  # Crítico
+                fator_ambiental *= 0.8
+            elif o2 < 5.0:  # Subótimo
+                fator_ambiental *= 0.9
+
+        # Aplicar correção ambiental
+        peso_final = peso_base * fator_ambiental
+
+        # Aplicar limites realísticos
+        peso_final = np.clip(peso_final, 0.01, 50.0)
+
+        return peso_final
+
+    def _calculate_water_quality_index(self, temperatura, ph, o2):
+        """
+        Calcula índice de qualidade da água usando dados REAIS
+        Retorna valor de 0 a 10 (10 = excelente)
+        """
+        scores = []
+
+        # Score de temperatura (tilápias: ótimo 26-30°C)
+        temp_score = temperatura.apply(lambda t:
+                                       10 if 26 <= t <= 30 else
+                                       8 if 24 <= t <= 32 else
+                                       6 if 22 <= t <= 34 else
+                                       4 if 20 <= t <= 36 else 2
+                                       )
+        scores.append(temp_score)
+
+        # Score de pH (tilápias: ótimo 6.5-8.5)
+        ph_score = ph.apply(lambda p:
+                            10 if 6.5 <= p <= 8.5 else
+                            8 if 6.0 <= p <= 9.0 else
+                            6 if 5.5 <= p <= 9.5 else
+                            4 if 5.0 <= p <= 10.0 else 2
+                            )
+        scores.append(ph_score)
+
+        # Score de O2 (tilápias: ótimo >5 mg/L)
+        o2_score = o2.apply(lambda o:
+                            10 if o >= 5 else
+                            8 if o >= 4 else
+                            6 if o >= 3 else
+                            4 if o >= 2 else 2
+                            )
+        scores.append(o2_score)
+
+        # Média dos scores
+        return sum(scores) / len(scores)

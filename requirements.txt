@@ -1,0 +1,25 @@
+# Streamlit e visualização
+streamlit>=1.28.0
+plotly>=5.17.0
+
+# Manipulação de dados
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Imagens e arquivos
+Pillow>=10.0.0
+
+# APIs e requests (se usar)
+requests>=2.31.0
+
+# Processamento de dados (se usar)
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Machine Learning (se usar)
+scikit-learn>=1.3.0
+
+# Outras dependências comuns
+python-dateutil>=2.8.0
+pytz>=2023.3
+scypy>=0.0.6

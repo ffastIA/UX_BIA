@@ -1,0 +1,229 @@
+import numpy as np
+import pandas as pd
+from scipy import stats
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+import warnings
+
+warnings.filterwarnings('ignore')
+
+
+class StatisticalAnalyzer:
+    def __init__(self, confidence_level=0.95):
+        self.confidence_level = confidence_level
+        self.alpha = 1 - confidence_level
+
+    def comprehensive_statistics(self, data):
+        """Estatísticas descritivas completas"""
+        data_clean = pd.Series(data).dropna()
+
+        if len(data_clean) == 0:
+            return self._empty_stats()
+
+        stats_dict = {
+            'count': len(data_clean),
+            'mean': np.mean(data_clean),
+            'median': np.median(data_clean),
+            'std': np.std(data_clean, ddof=1),
+            'variance': np.var(data_clean, ddof=1),
+            'min': np.min(data_clean),
+            'max': np.max(data_clean),
+            'q25': np.percentile(data_clean, 25),
+            'q75': np.percentile(data_clean, 75),
+            'iqr': np.percentile(data_clean, 75) - np.percentile(data_clean, 25),
+            'range': np.max(data_clean) - np.min(data_clean),
+            'skewness': stats.skew(data_clean),
+            'kurtosis': stats.kurtosis(data_clean),
+            'cv': np.std(data_clean, ddof=1) / np.mean(data_clean) if np.mean(data_clean) != 0 else np.inf
+        }
+
+        # Intervalo de confiança
+        if len(data_clean) > 1:
+            ci = stats.t.interval(
+                self.confidence_level,
+                len(data_clean) - 1,
+                loc=stats_dict['mean'],
+                scale=stats.sem(data_clean)
+            )
+            stats_dict['ci_lower'] = ci[0]
+            stats_dict['ci_upper'] = ci[1]
+            stats_dict['margin_error'] = (ci[1] - ci[0]) / 2
+        else:
+            stats_dict['ci_lower'] = stats_dict['mean']
+            stats_dict['ci_upper'] = stats_dict['mean']
+            stats_dict['margin_error'] = 0
+
+        return stats_dict
+
+    def _empty_stats(self):
+        """Retorna estatísticas vazias"""
+        return {key: np.nan for key in [
+            'count', 'mean', 'median', 'std', 'variance', 'min', 'max',
+            'q25', 'q75', 'iqr', 'range', 'skewness', 'kurtosis', 'cv',
+            'ci_lower', 'ci_upper', 'margin_error'
+        ]}
+
+    def advanced_normality_tests(self, data):
+        """Testes de normalidade avançados"""
+        data_clean = pd.Series(data).dropna()
+
+        results = {}
+
+        # Shapiro-Wilk
+        if len(data_clean) <= 5000:
+            try:
+                stat, p_val = stats.shapiro(data_clean)
+                results['shapiro'] = {
+                    'statistic': stat,
+                    'p_value': p_val,
+                    'is_normal': p_val > self.alpha
+                }
+            except:
+                results['shapiro'] = {'statistic': np.nan, 'p_value': np.nan, 'is_normal': False}
+
+        # Anderson-Darling
+        try:
+            result = stats.anderson(data_clean, dist='norm')
+            results['anderson'] = {
+                'statistic': result.statistic,
+                'critical_values': result.critical_values,
+                'significance_levels': result.significance_level
+            }
+        except:
+            results['anderson'] = {'statistic': np.nan}
+
+        # Kolmogorov-Smirnov
+        try:
+            stat, p_val = stats.kstest(data_clean, 'norm',
+                                       args=(np.mean(data_clean), np.std(data_clean)))
+            results['ks'] = {
+                'statistic': stat,
+                'p_value': p_val,
+                'is_normal': p_val > self.alpha
+            }
+        except:
+            results['ks'] = {'statistic': np.nan, 'p_value': np.nan, 'is_normal': False}
+
+        return results
+
+    def detect_outliers(self, data, method='iqr'):
+        """Detecção avançada de outliers"""
+        data_clean = pd.Series(data).dropna()
+
+        if len(data_clean) == 0:
+            return {'indices': [], 'values': [], 'n_outliers': 0, 'percentage': 0}
+
+        if method == 'iqr':
+            Q1 = np.percentile(data_clean, 25)
+            Q3 = np.percentile(data_clean, 75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            outliers = (data_clean < lower_bound) | (data_clean > upper_bound)
+
+        elif method == 'zscore':
+            z_scores = np.abs(stats.zscore(data_clean))
+            outliers = z_scores > 3
+
+        elif method == 'modified_zscore':
+            median = np.median(data_clean)
+            mad = np.median(np.abs(data_clean - median))
+            modified_z_scores = 0.6745 * (data_clean - median) / mad
+            outliers = np.abs(modified_z_scores) > 3.5
+
+        else:
+            outliers = pd.Series([False] * len(data_clean))
+
+        return {
+            'indices': np.where(outliers)[0],
+            'values': data_clean[outliers],
+            'n_outliers': np.sum(outliers),
+            'percentage': (np.sum(outliers) / len(data_clean)) * 100
+        }
+
+    def correlation_matrix(self, data):
+        """Calcula matriz de correlação"""
+        return data.corr()
+
+    def regression_analysis(self, x, y):
+        """Análise de regressão linear"""
+        x_clean = pd.Series(x).dropna()
+        y_clean = pd.Series(y).dropna()
+
+        # Alinhar dados
+        min_len = min(len(x_clean), len(y_clean))
+        x_clean = x_clean[:min_len]
+        y_clean = y_clean[:min_len]
+
+        if len(x_clean) < 2:
+            return self._empty_regression()
+
+        # Regressão linear
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x_clean, y_clean)
+
+        # Predições
+        y_pred = slope * x_clean + intercept
+
+        # Métricas
+        r2 = r_value ** 2
+        r2_adj = 1 - (1 - r2) * (len(x_clean) - 1) / (len(x_clean) - 2)
+
+        return {
+            'slope': slope,
+            'intercept': intercept,
+            'r2': r2,
+            'r2_adj': r2_adj,
+            'p_value': p_value,
+            'std_err': std_err,
+            'predictions': y_pred,
+            'residuals': y_clean - y_pred
+        }
+
+    def _empty_regression(self):
+        """Retorna regressão vazia"""
+        return {
+            'slope': np.nan,
+            'intercept': np.nan,
+            'r2': np.nan,
+            'r2_adj': np.nan,
+            'p_value': np.nan,
+            'std_err': np.nan,
+            'predictions': np.array([]),
+            'residuals': np.array([])
+        }
+
+    def descriptive_statistics(self, data):
+        """Mantém compatibilidade com versão anterior"""
+        return self.comprehensive_statistics(data)
+
+    def normality_test(self, data):
+        """Mantém compatibilidade com versão anterior"""
+        results = self.advanced_normality_tests(data)
+
+        # Retorna o primeiro teste disponível
+        if 'shapiro' in results:
+            return {
+                'test_name': 'Shapiro-Wilk',
+                'statistic': results['shapiro']['statistic'],
+                'p_value': results['shapiro']['p_value'],
+                'is_normal': results['shapiro']['is_normal'],
+                'alpha': self.alpha
+            }
+        elif 'ks' in results:
+            return {
+                'test_name': 'Kolmogorov-Smirnov',
+                'statistic': results['ks']['statistic'],
+                'p_value': results['ks']['p_value'],
+                'is_normal': results['ks']['is_normal'],
+                'alpha': self.alpha
+            }
+        else:
+            return {
+                'test_name': 'No Test Available',
+                'statistic': np.nan,
+                'p_value': np.nan,
+                'is_normal': False,
+                'alpha': self.alpha
+            }

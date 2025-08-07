@@ -1,0 +1,97 @@
+import numpy as np
+import streamlit as st
+
+
+class WeightEstimator:
+    """
+    Classe para estimativa de peso dos peixes baseada em dimensões do bounding box
+
+    IMPORTANTE: Esta implementação contém fórmulas placeholder que devem ser
+    calibradas com dados reais de peso vs dimensões.
+    """
+
+    def __init__(self, correction_factor=1.0):
+        self.correction_factor = correction_factor
+
+        # PARÂMETROS PARA CALIBRAÇÃO - SEÇÃO CRÍTICA
+        self.CALIBRATION_PARAMS = {
+            'densidade_peixe': 1.05,  # kg/L - AJUSTAR conforme espécie
+            'fator_forma': 0.7,  # Relação 2D->3D - AJUSTAR
+            'fator_profundidade': 0.6,  # Profundidade/largura - AJUSTAR
+            'coef_alometrico': 3.2,  # Expoente alométrico - AJUSTAR
+            'intercepto': 0.001  # Intercepto da regressão - AJUSTAR
+        }
+
+    def estimate_weight_basic(self, largura, altura):
+        """
+        Estimativa básica de peso usando fórmula alométrica
+
+        ⚠️ ATENÇÃO: FÓRMULA PLACEHOLDER ⚠️
+        Esta fórmula deve ser substituída por uma calibrada com dados reais!
+        """
+
+        params = self.CALIBRATION_PARAMS
+
+        # Método 1: Volume estimado
+        profundidade_est = largura * params['fator_profundidade']
+        volume_cm3 = largura * altura * profundidade_est * params['fator_forma']
+        volume_litros = volume_cm3 / 1000
+        peso_volumetrico = volume_litros * params['densidade_peixe']
+
+        # Método 2: Relação alométrica
+        comprimento_equiv = np.sqrt(largura * altura)  # Comprimento equivalente
+        peso_alometrico = (
+                params['intercepto'] *
+                np.power(comprimento_equiv, params['coef_alometrico'])
+        )
+
+        # Combinar métodos (média ponderada)
+        peso_final = (0.6 * peso_volumetrico + 0.4 * peso_alometrico)
+
+        # Aplicar fator de correção
+        peso_final *= self.correction_factor
+
+        # Limites realísticos
+        peso_final = np.clip(peso_final, 0.01, 100.0)
+
+        return peso_final
+
+    def estimate_weight_advanced(self, largura, altura, temperatura=None, ph=None, o2=None):
+        """
+        Estimativa avançada considerando parâmetros ambientais
+
+        ⚠️ ATENÇÃO: IMPLEMENTAÇÃO PLACEHOLDER ⚠️
+        Fatores ambientais devem ser calibrados com dados experimentais!
+        """
+
+        # Peso base
+        peso_base = self.estimate_weight_basic(largura, altura)
+
+        # Fatores de correção ambiental (PLACEHOLDER)
+        fator_temp = 1.0
+        fator_ph = 1.0
+        fator_o2 = 1.0
+
+        if temperatura is not None:
+            # Temperatura ótima: 25-28°C para tilápias
+            temp_otima = 26.5
+            desvio_temp = abs(temperatura - temp_otima)
+            fator_temp = max(0.8, 1.0 - (desvio_temp * 0.02))
+
+        if ph is not None:
+            # pH ótimo: 6.5-8.5 para tilápias
+            ph_otimo = 7.5
+            desvio_ph = abs(ph - ph_otimo)
+            fator_ph = max(0.9, 1.0 - (desvio_ph * 0.05))
+
+        if o2 is not None:
+            # O2 ótimo: >5 mg/L
+            if o2 >= 5:
+                fator_o2 = 1.0
+            else:
+                fator_o2 = max(0.7, o2 / 5.0)
+
+        # Aplicar correções
+        peso_corrigido = peso_base * fator_temp * fator_ph * fator_o2
+
+        return peso_corrigido
