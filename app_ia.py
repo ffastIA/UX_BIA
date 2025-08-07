@@ -161,214 +161,77 @@ def load_sheets():
 
 
 def add_consultor_icon():
-    """Versão ultra-robusta do ícone - NUNCA falha no deploy"""
+    """Versão ultra-robusta - NUNCA falha, funciona em qualquer deploy"""
 
+    # URL do assistente (com fallback)
     try:
-        # URL da imagem no seu repositório GitHub
-        IMAGE_URL = "https://raw.githubusercontent.com/ffastIA/UX_BIA/main/images/Tilap-IA.png"
+        assistant_url = PROFESSOR_ASSISTANT_URL
+    except:
+        assistant_url = "https://ffastia-bia-rag-bia-chain-mem-vgkrw6.streamlit.app/"
 
-        img_base64 = None
-        source = "emoji-fallback"
+    # Layout sempre funciona
+    col1, col2, col3 = st.columns([1, 2, 1])
 
-        # Tentar carregar imagem local primeiro (apenas se requests disponível)
-        try:
-            import os
-            possible_paths = ["images/Tilap-IA.png", "assets/Tilap-IA.png", "Tilap-IA.png"]
-
-            for path in possible_paths:
-                if os.path.exists(path):
-                    try:
-                        import base64
-                        with open(path, "rb") as img_file:
-                            img_base64 = base64.b64encode(img_file.read()).decode()
-                            source = f"local: {path}"
-                            break
-                    except Exception:
-                        continue
-        except Exception:
-            pass
-
-        # Se não encontrou local, tentar URL (apenas se requests disponível)
-        if not img_base64:
-            try:
-                import requests
-                import base64
-                response = requests.get(IMAGE_URL, timeout=3)
-                if response.status_code == 200:
-                    img_base64 = base64.b64encode(response.content).decode()
-                    source = "GitHub"
-            except Exception:
-                pass
-
-        # Layout horizontal compacto - SEMPRE FUNCIONA
-        col1, col2, col3 = st.columns([1, 2, 1])
-
-        with col2:
-            if img_base64 and len(img_base64) > 100:
-                # VERSÃO COM IMAGEM REAL
-                st.markdown(f"""
-                <div style="
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
-                    gap: 1rem; 
-                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                    padding: 1rem 2rem;
-                    border-radius: 15px;
-                    border: 1px solid rgba(59, 130, 246, 0.2);
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                    margin: 1rem 0;
-                ">
-                    <a href="{PROFESSOR_ASSISTANT_URL}" target="_blank" style="text-decoration: none;">
-                        <div style="
-                            width: 60px; 
-                            height: 60px; 
-                            border-radius: 50%; 
-                            display: flex; 
-                            align-items: center; 
-                            justify-content: center;
-                            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-                            border: 3px solid white;
-                            transition: all 0.3s ease;
-                            cursor: pointer;
-                            overflow: hidden;
-                            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-                        " onmouseover="
-                            this.style.transform='scale(1.1)'; 
-                            this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.5)';
-                        " onmouseout="
-                            this.style.transform='scale(1)'; 
-                            this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
-                        ">
-                            <img src="data:image/png;base64,{img_base64}" 
-                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" 
-                                 alt="Prof. Tilap-IA" />
-                        </div>
-                    </a>
-                    <div style="text-align: left;">
-                        <h4 style="
-                            color: #1e40af; 
-                            margin: 0; 
-                            font-size: 1.1rem;
-                            font-weight: 600;
-                        ">🤖 Prof. Tilap-IA Disponível</h4>
-                        <p style="
-                            color: #64748b; 
-                            margin: 0.2rem 0 0 0; 
-                            font-size: 0.85rem;
-                        ">Clique para consultar o especialista em aquicultura</p>
-                        <p style="
-                            color: #10b981; 
-                            margin: 0; 
-                            font-size: 0.7rem;
-                            font-style: italic;
-                        ">✅ Imagem: {source}</p>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                # VERSÃO EMOJI - SEMPRE FUNCIONA (FALLBACK GARANTIDO)
-                st.markdown(f"""
-                <div style="
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
-                    gap: 1rem; 
-                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                    padding: 1rem 2rem;
-                    border-radius: 15px;
-                    border: 1px solid rgba(59, 130, 246, 0.2);
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                    margin: 1rem 0;
-                ">
-                    <a href="{PROFESSOR_ASSISTANT_URL}" target="_blank" style="text-decoration: none;">
-                        <div style="
-                            width: 60px; 
-                            height: 60px; 
-                            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-                            border-radius: 50%; 
-                            display: flex; 
-                            align-items: center; 
-                            justify-content: center;
-                            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-                            border: 3px solid white;
-                            font-size: 1.8rem;
-                            transition: all 0.3s ease;
-                            cursor: pointer;
-                        " onmouseover="
-                            this.style.transform='scale(1.1) rotate(5deg)'; 
-                            this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.6)';
-                        " onmouseout="
-                            this.style.transform='scale(1) rotate(0deg)'; 
-                            this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
-                        ">
-                            🐟🤓
-                        </div>
-                    </a>
-                    <div style="text-align: left;">
-                        <h4 style="
-                            color: #1e40af; 
-                            margin: 0; 
-                            font-size: 1.1rem;
-                            font-weight: 600;
-                        ">🤖 Prof. Tilap-IA Disponível</h4>
-                        <p style="
-                            color: #64748b; 
-                            margin: 0.2rem 0 0 0; 
-                            font-size: 0.85rem;
-                        ">Clique para consultar o especialista em aquicultura</p>
-                        <p style="
-                            color: #3b82f6; 
-                            margin: 0; 
-                            font-size: 0.7rem;
-                            font-style: italic;
-                        ">🎨 Versão emoji (deploy-ready)</p>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-    except Exception as e:
-        # FALLBACK DE EMERGÊNCIA - SE TUDO FALHAR
+    with col2:
+        # HTML puro - sempre funciona
         st.markdown(f"""
         <div style="
-            text-align: center;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 1rem; 
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            padding: 1rem;
-            border-radius: 10px;
+            padding: 1rem 2rem;
+            border-radius: 15px;
             border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             margin: 1rem 0;
         ">
-            <a href="{PROFESSOR_ASSISTANT_URL}" target="_blank" style="
-                display: inline-block;
-                background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-                color: white;
-                padding: 0.8rem 1.5rem;
-                border-radius: 25px;
-                text-decoration: none;
-                font-weight: 600;
-                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-                transition: all 0.3s ease;
-            " onmouseover="
-                this.style.transform='scale(1.05)';
-                this.style.boxShadow='0 6px 20px rgba(59, 130, 246, 0.5)';
-            " onmouseout="
-                this.style.transform='scale(1)';
-                this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
-            ">
-                🤖 Acessar Prof. Tilap-IA
+            <a href="{assistant_url}" target="_blank" style="text-decoration: none;">
+                <div style="
+                    width: 60px; 
+                    height: 60px; 
+                    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center;
+                    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+                    border: 3px solid white;
+                    font-size: 1.8rem;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                " onmouseover="
+                    this.style.transform='scale(1.1) rotate(5deg)'; 
+                    this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.6)';
+                " onmouseout="
+                    this.style.transform='scale(1) rotate(0deg)'; 
+                    this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
+                ">
+                    🐟🤓
+                </div>
             </a>
-            <p style="
-                color: #64748b; 
-                margin: 0.5rem 0 0 0; 
-                font-size: 0.8rem;
-            ">Consultor especialista em aquicultura</p>
+            <div style="text-align: left;">
+                <h4 style="
+                    color: #1e40af; 
+                    margin: 0; 
+                    font-size: 1.1rem;
+                    font-weight: 600;
+                ">🤖 Prof. Tilap-IA Disponível</h4>
+                <p style="
+                    color: #64748b; 
+                    margin: 0.2rem 0 0 0; 
+                    font-size: 0.85rem;
+                ">Clique para consultar o especialista em aquicultura</p>
+                <p style="
+                    color: #3b82f6; 
+                    margin: 0; 
+                    font-size: 0.7rem;
+                    font-style: italic;
+                ">🎨 Deploy-ready (sempre funciona)</p>
+            </div>
         </div>
         """, unsafe_allow_html=True)
-
-        # Log do erro (apenas em desenvolvimento)
-        if 'debug_mode' in st.session_state and st.session_state.debug_mode:
-            st.error(f"Erro no ícone compacto: {str(e)}")
-
 
 
 def calculate_feed_conversion_rate(data):
@@ -697,18 +560,18 @@ def display_data_preview():
         else:
             st.error("❌ Dados de ração não carregados")
 
+
 def display_dashboard():
-    """Dashboard principal COMPLETO com ícone sempre visível"""
+    """Dashboard principal COMPLETO com ícone SEMPRE visível"""
     st.subheader("📊 Dashboard de Análises Avançadas")
 
-    # ÍCONE COMPACTO sempre visível no topo - COM PROTEÇÃO
-    try:
-        add_consultor_icon()
-    except Exception as e:
-        # Fallback de emergência
-        st.info(f"🤖 **Prof. Tilap-IA disponível:** [Clique aqui para acessar]({PROFESSOR_ASSISTANT_URL})")
-        if 'debug_mode' in st.session_state and st.session_state.debug_mode:
-            st.error(f"Erro no ícone: {str(e)}")
+    # FORÇAR exibição do ícone - SEMPRE EXECUTA
+    st.markdown("### 🤖 Assistente Especializado")
+    add_consultor_icon()
+
+    # Separador
+    st.markdown("---")
+    st.markdown("### 📊 Análises dos Dados")
 
     data = st.session_state.processed_data
     analysis = st.session_state.get('analysis_results', {})
@@ -720,14 +583,14 @@ def display_dashboard():
     # KPIs expandidos
     display_advanced_kpis(data)
 
-    # Abas COMPLETAS de análises (SEM a aba do Assistente IA)
+    # Abas de análises
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📊 Análise Temporal",
+        "�� Análise Temporal",
         "🔄 Taxa de Conversão",
         "📉 Curva de Gauss",
         "🔬 Estatísticas Avançadas",
         "📋 Relatórios",
-        "💾 Exportação"
+        "�� Exportação"
     ])
 
     with tab1:
@@ -747,6 +610,12 @@ def display_dashboard():
 
     with tab6:
         display_advanced_export(data, analysis)
+
+    # GARANTIA EXTRA: Ícone no final também
+    st.markdown("---")
+    st.markdown("### 💬 Precisa de Ajuda?")
+    add_consultor_icon()
+
 
 
 def display_advanced_kpis(data):
