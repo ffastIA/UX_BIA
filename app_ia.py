@@ -694,8 +694,14 @@ def display_data_preview():
 
 
 def display_dashboard():
-    """Dashboard principal COMPLETO"""
+    """Dashboard principal COMPLETO com ícone sempre visível"""
     st.subheader("📊 Dashboard de Análises Avançadas")
+
+    # ADICIONAR: Ícone do consultor sempre visível no topo
+    add_consultor_icon()
+
+    # Separador visual
+    st.markdown("---")
 
     data = st.session_state.processed_data
     analysis = st.session_state.get('analysis_results', {})
@@ -707,13 +713,12 @@ def display_dashboard():
     # KPIs expandidos
     display_advanced_kpis(data)
 
-    # Abas COMPLETAS de análises
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    # Abas COMPLETAS de análises (SEM a aba do Assistente IA)
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📊 Análise Temporal",
         "🔄 Taxa de Conversão",
         "📉 Curva de Gauss",
         "🔬 Estatísticas Avançadas",
-        "🤖 Assistente IA",
         "📋 Relatórios",
         "💾 Exportação"
     ])
@@ -731,14 +736,10 @@ def display_dashboard():
         display_advanced_statistics(data, analysis)
 
     with tab5:
-        display_ai_assistant()
-
-    with tab6:
         display_automated_reports(data, analysis)
 
-    with tab7:
+    with tab6:
         display_advanced_export(data, analysis)
-
 
 def display_advanced_kpis(data):
     """KPIs avançados"""
