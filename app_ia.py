@@ -251,14 +251,14 @@ def add_consultor_icon():
                     ">
                         👆 <strong>Clique para acessar<br/>o Prof. Tilap-IA!</strong>
                     </p>
-                    <p style="
-                        color: #64748b; 
-                        font-size: 0.8rem; 
-                        margin: 0.3rem 0 0 0;
-                        font-style: italic;
-                    ">
-                        ✅ Imagem carregada: {image_found_path}
-                    </p>
+                    # <p style="
+                    #     color: #64748b; 
+                    #     font-size: 0.8rem; 
+                    #     margin: 0.3rem 0 0 0;
+                    #     font-style: italic;
+                    # ">
+                    #     ✅ Imagem carregada: {image_found_path}
+                    # </p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
