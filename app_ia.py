@@ -167,7 +167,7 @@ def add_consultor_icon():
     try:
         assistant_url = PROFESSOR_ASSISTANT_URL
     except:
-        assistant_url = "https://ffastia-bia-rag-bia-chain-mem-vgkrw6.streamlit.app/"
+        assistant_url = "https://github.com/ffastIA/UX_BIA/blob/main/images/Tilap-IA.png"
 
     # Layout sempre funciona
     col1, col2, col3 = st.columns([1, 2, 1])
