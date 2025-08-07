@@ -1096,46 +1096,51 @@ def display_advanced_statistics(data, analysis):
                                                                                                    False) else "Não-Normal")
                     st.markdown('</div>', unsafe_allow_html=True)
 
+
 def display_ai_assistant():
-    """Assistente de IA"""
-    st.subheader("🤖 Assistente de IA - Prof. Tilap-IA")
+    """Assistente de IA - VERSÃO CORRIGIDA"""
+    st.subheader("🤖 Consultor Virtual de IA - Dr. Tilap-IA")
+
+    # URL com fallback
+    assistant_url = globals().get('PROFESSOR_ASSISTANT_URL',
+                                  'https://ffastia-bia-rag-bia-chain-mem-vgkrw6.streamlit.app/')
 
     st.info(f"""
-        **🚀 Assistente Especializado em Aquicultura**
+    **🚀 Assistente Especializado em Aquicultura**
 
-        O Prof. Tilap-IA está disponível para ajudar com:
+    O Dr. Tilap-IA está disponível para ajudar com:
 
-        **📊 Análises Personalizadas:**
-        - Interpretação inteligente dos seus dados
-        - Identificação de padrões e tendências
-        - Recomendações específicas para cada tanque
+    **📊 Análises Personalizadas:**
+    - Interpretação inteligente dos seus dados
+    - Identificação de padrões e tendências
+    - Recomendações específicas para cada tanque
 
-        **💬 Chat Interativo:**
-        - Perguntas sobre TCA, crescimento e eficiência
-        - Comparações entre tanques
-        - Sugestões de melhorias no manejo
+    **💬 Chat Interativo:**
+    - Perguntas sobre TCA, crescimento e eficiência
+    - Comparações entre tanques
+    - Sugestões de melhorias no manejo
 
-        **📋 Relatórios Inteligentes:**
-        - Análises automáticas dos resultados
-        - Alertas sobre problemas potenciais
-        - Estratégias de otimização
+    **📋 Relatórios Inteligentes:**
+    - Análises automáticas dos resultados
+    - Alertas sobre problemas potenciais
+    - Estratégias de otimização
 
-        **💡 Conhecimento Especializado:**
-        - Melhores práticas em aquicultura
-        - Parâmetros ideais de qualidade da água
-        - Estratégias de alimentação eficientes
-        """)
+    **💡 Conhecimento Especializado:**
+    - Melhores práticas em aquicultura
+    - Parâmetros ideais de qualidade da água
+    - Estratégias de alimentação eficientes
+    """)
 
     # Botão para acessar o assistente
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🚀 Acessar Prof. Tilap-IA", use_container_width=True, type="primary"):
-            st.success("✅ Abrindo Prof. Tilap-IA em nova aba...")
-            st.markdown(f'<meta http-equiv="refresh" content="0; url={PROFESSOR_ASSISTANT_URL}">',
+        if st.button("🚀 Acessar Dr. Tilap-IA", use_container_width=True, type="primary"):
+            st.success("✅ Abrindo Dr. Tilap-IA em nova aba...")
+            st.markdown(f'<a href="{assistant_url}" >Clique aqui se não abrir automaticamente</a>',
                         unsafe_allow_html=True)
 
     # Exemplos de perguntas
-    st.subheader("💭 Exemplos de Perguntas para o Prof. Tilap-IA")
+    st.subheader("💭 Exemplos de Perguntas para o Dr. Tilap-IA")
 
     examples = [
         "🔄 Qual tanque tem a melhor taxa de conversão alimentar?",
@@ -1148,6 +1153,7 @@ def display_ai_assistant():
 
     for example in examples:
         st.write(f"• {example}")
+
 
 def display_automated_reports(data, analysis):
     """Gera relatórios automatizados"""

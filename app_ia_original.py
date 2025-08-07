@@ -293,7 +293,7 @@ def add_consultor_icon():
                     font-size: 0.95rem;
                     line-height: 1.4;
                 ">
-                    👆 <strong>Clique para acessar<br/>o Prof. Tilap-IA!</strong>
+                    👆 <strong>Clique para acessar nosso consultor virtual<br/>Dr. Tilap-IA!</strong>
                 </p>
                 <p style="
                     color: #64748b; 
