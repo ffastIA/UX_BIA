@@ -38,7 +38,7 @@ except ImportError:
     APP_LAYOUT = "wide"
     DEFAULT_CONFIDENCE_LEVEL = 0.95
     DEFAULT_CORRECTION_FACTOR = 1.0
-    PROFESSOR_ASSISTANT_URL = "https://ffastia-bia-rag-bia-chain-mem-vgkrw6.streamlit.app/"
+    PROFESSOR_ASSISTANT_URL = "https://github.com/ffastIA/UX_BIA/blob/main/images/Tilap-IA.png"
 
 # Configuração da página
 st.set_page_config(
