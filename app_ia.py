@@ -626,7 +626,7 @@ def display_welcome():
 
 def display_data_preview():
     """Preview dos dados expandido"""
-    st.subheader("�� Preview dos Dados do Google Sheets")
+    st.subheader("📊 Preview dos Dados do Google Sheets")
 
     if 'sheets_data' not in st.session_state:
         st.warning("⚠️ Dados não carregados")
@@ -709,7 +709,7 @@ def display_dashboard():
 
     # Abas COMPLETAS de análises
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "�� Análise Temporal",
+        "📊 Análise Temporal",
         "🔄 Taxa de Conversão",
         "📉 Curva de Gauss",
         "🔬 Estatísticas Avançadas",
