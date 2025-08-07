@@ -158,213 +158,205 @@ def load_sheets():
 
 
 def add_consultor_icon():
-    """Adiciona ícone do consultor virtual com sistema robusto de fallback"""
+    """Versão compacta do ícone do consultor para o dashboard - Deploy Ready"""
+
+    # URL da imagem no seu repositório GitHub
+    IMAGE_URL = "https://raw.githubusercontent.com/ffastIA/UX_BIA/main/images/Tilap-IA.png"
+
+    # Tentar carregar imagem local primeiro, depois URL
     import base64
     import os
+    import requests
 
-    def get_image_base64(image_path):
-        """Tenta carregar imagem e converter para base64"""
+    def get_image_base64_local(image_path):
+        """Tenta carregar imagem local"""
         try:
             if os.path.exists(image_path):
                 with open(image_path, "rb") as img_file:
                     return base64.b64encode(img_file.read()).decode()
             return None
-        except Exception as e:
-            print(f"Erro ao carregar imagem {image_path}: {e}")
+        except Exception:
             return None
 
-    # Lista de possíveis locais da imagem
+    def get_image_base64_url(url):
+        """Tenta carregar imagem via URL"""
+        try:
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                return base64.b64encode(response.content).decode()
+            return None
+        except Exception:
+            return None
+
+    # Tentar carregar imagem local primeiro
     possible_paths = [
         "images/Tilap-IA.png",
         "assets/Tilap-IA.png",
         "static/Tilap-IA.png",
-        "Tilap-IA.png",
-        "./images/Tilap-IA.png",
-        "../images/Tilap-IA.png",
-        "src/images/Tilap-IA.png",
-        "config/images/Tilap-IA.png"
+        "Tilap-IA.png"
     ]
 
-    # Tentar carregar a imagem
     img_base64 = None
-    image_found_path = None
+    source = "fallback"
 
+    # Tentar local primeiro
     for path in possible_paths:
-        img_base64 = get_image_base64(path)
+        img_base64 = get_image_base64_local(path)
         if img_base64:
-            image_found_path = path
-            print(f"✅ Imagem encontrada em: {path}")
+            source = f"local: {path}"
             break
 
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # Se não encontrou local, tentar URL do GitHub
+    if not img_base64:
+        img_base64 = get_image_base64_url(IMAGE_URL)
+        if img_base64:
+            source = "GitHub: ffastIA/UX_BIA"
+
+    # Layout horizontal compacto
+    col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
         if img_base64:
-            # VERSÃO COM IMAGEM REAL
+            # VERSÃO COMPACTA COM IMAGEM
             st.markdown(f"""
-            <div style="text-align: center; margin: 2rem 0;">
-                <a href="{PROFESSOR_ASSISTANT_URL}"  style="text-decoration: none;">
+            <div style="
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                gap: 1rem; 
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                padding: 1rem 2rem;
+                border-radius: 15px;
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                margin: 1rem 0;
+            ">
+                <a href="{PROFESSOR_ASSISTANT_URL}" target="_blank" style="text-decoration: none;">
                     <div style="
-                        width: 90px; 
-                        height: 90px; 
+                        width: 60px; 
+                        height: 60px; 
                         border-radius: 50%; 
                         display: flex; 
                         align-items: center; 
                         justify-content: center;
-                        margin: 0 auto 1.5rem auto;
-                        box-shadow: 
-                            0 8px 25px rgba(59, 130, 246, 0.4),
-                            0 0 0 4px rgba(255, 255, 255, 0.9),
-                            0 0 0 8px rgba(59, 130, 246, 0.2);
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+                        border: 3px solid white;
                         transition: all 0.3s ease;
                         cursor: pointer;
                         overflow: hidden;
                         background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-                        position: relative;
                     " onmouseover="
-                        this.style.transform='scale(1.1) rotate(3deg)'; 
-                        this.style.boxShadow='0 15px 40px rgba(59, 130, 246, 0.7), 0 0 0 4px rgba(255, 255, 255, 1), 0 0 0 10px rgba(59, 130, 246, 0.4)';
+                        this.style.transform='scale(1.1)'; 
+                        this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.5)';
                     " onmouseout="
-                        this.style.transform='scale(1) rotate(0deg)'; 
-                        this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.4), 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 0 8px rgba(59, 130, 246, 0.2)';
+                        this.style.transform='scale(1)'; 
+                        this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
                     ">
                         <img src="data:image/png;base64,{img_base64}" 
                              style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" 
                              alt="Prof. Tilap-IA" />
                     </div>
                 </a>
-                <div style="
-                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                    padding: 0.8rem 1.2rem;
-                    border-radius: 20px;
-                    border: 1px solid rgba(59, 130, 246, 0.2);
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                    max-width: 280px;
-                    margin: 0 auto;
-                ">
-                    <p style="
+                <div style="text-align: left;">
+                    <h4 style="
                         color: #1e40af; 
-                        font-weight: 600; 
                         margin: 0; 
-                        font-size: 0.95rem;
-                        line-height: 1.4;
-                    ">
-                        👆 <strong>Clique para acessar o consultor virtual<br/>Dr. Tilap-IA!</strong>
-                    </p>
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                    ">🤖 Prof. Tilap-IA Disponível</h4>
+                    <p style="
+                        color: #64748b; 
+                        margin: 0.2rem 0 0 0; 
+                        font-size: 0.85rem;
+                    ">Clique para consultar o especialista em aquicultura</p>
+                    <p style="
+                        color: #10b981; 
+                        margin: 0; 
+                        font-size: 0.7rem;
+                        font-style: italic;
+                    ">✅ Imagem carregada via {source}</p>
                 </div>
             </div>
             """, unsafe_allow_html=True)
         else:
-            # VERSÃO COM EMOJI (FALLBACK ESTILIZADO)
+            # VERSÃO COMPACTA COM EMOJI (FALLBACK MELHORADO)
             st.markdown(f"""
-            <div style="text-align: center; margin: 2rem 0;">
-                <a href="{PROFESSOR_ASSISTANT_URL}"  style="text-decoration: none;">
+            <div style="
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                gap: 1rem; 
+                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+                padding: 1rem 2rem;
+                border-radius: 15px;
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                margin: 1rem 0;
+            ">
+                <a href="{PROFESSOR_ASSISTANT_URL}" target="_blank" style="text-decoration: none;">
                     <div style="
-                        width: 90px; 
-                        height: 90px; 
-                        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1e3a8a 100%);
+                        width: 60px; 
+                        height: 60px; 
+                        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
                         border-radius: 50%; 
                         display: flex; 
                         align-items: center; 
                         justify-content: center;
-                        margin: 0 auto 1.5rem auto;
-                        box-shadow: 
-                            0 8px 25px rgba(59, 130, 246, 0.4),
-                            0 0 0 4px rgba(255, 255, 255, 0.9),
-                            0 0 0 8px rgba(59, 130, 246, 0.2);
-                        font-size: 2.8rem;
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+                        border: 3px solid white;
+                        font-size: 1.8rem;
                         transition: all 0.3s ease;
                         cursor: pointer;
-                        position: relative;
-                        animation: pulse-glow 3s ease-in-out infinite;
+                        animation: pulse-glow-compact 3s ease-in-out infinite;
                     " onmouseover="
-                        this.style.transform='scale(1.15) rotate(5deg)'; 
-                        this.style.boxShadow='0 15px 40px rgba(59, 130, 246, 0.8), 0 0 0 4px rgba(255, 255, 255, 1), 0 0 0 10px rgba(59, 130, 246, 0.4)';
+                        this.style.transform='scale(1.1)'; 
+                        this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.5)';
                     " onmouseout="
-                        this.style.transform='scale(1) rotate(0deg)'; 
-                        this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.4), 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 0 8px rgba(59, 130, 246, 0.2)';
+                        this.style.transform='scale(1)'; 
+                        this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
                     ">
                         <span style="
-                            background: linear-gradient(45deg, #ffffff, #f0f9ff, #dbeafe);
+                            background: linear-gradient(45deg, #ffffff, #f0f9ff);
                             -webkit-background-clip: text;
                             -webkit-text-fill-color: transparent;
                             background-clip: text;
                             font-weight: bold;
-                            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-                            display: inline-block;
-                            animation: bounce-icon 2s ease-in-out infinite;
+                            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
                         ">🐟🤓</span>
                     </div>
                 </a>
-                <div style="
-                    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                    padding: 0.8rem 1.2rem;
-                    border-radius: 20px;
-                    border: 1px solid rgba(59, 130, 246, 0.2);
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                    max-width: 280px;
-                    margin: 0 auto;
-                ">
-                    <p style="
+                <div style="text-align: left;">
+                    <h4 style="
                         color: #1e40af; 
-                        font-weight: 600; 
                         margin: 0; 
-                        font-size: 0.95rem;
-                        line-height: 1.4;
-                    ">
-                        👆 <strong>Clique para acessar<br/>o Prof. Tilap-IA!</strong>
-                    </p>
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                    ">🤖 Prof. Tilap-IA Disponível</h4>
                     <p style="
                         color: #64748b; 
-                        font-size: 0.8rem; 
-                        margin: 0.3rem 0 0 0;
+                        margin: 0.2rem 0 0 0; 
+                        font-size: 0.85rem;
+                    ">Clique para consultar o especialista em aquicultura</p>
+                    <p style="
+                        color: #f59e0b; 
+                        margin: 0; 
+                        font-size: 0.7rem;
                         font-style: italic;
-                    ">
-                        ℹ️ Usando emoji (imagem não encontrada)
-                    </p>
+                    ">⚠️ Imagem não encontrada no GitHub</p>
                 </div>
             </div>
 
             <style>
-                @keyframes pulse-glow {{
+                @keyframes pulse-glow-compact {{
                     0%, 100% {{ 
-                        box-shadow: 
-                            0 8px 25px rgba(59, 130, 246, 0.4),
-                            0 0 0 4px rgba(255, 255, 255, 0.9),
-                            0 0 0 8px rgba(59, 130, 246, 0.2);
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
                     }}
                     50% {{ 
-                        box-shadow: 
-                            0 12px 30px rgba(59, 130, 246, 0.6),
-                            0 0 0 4px rgba(255, 255, 255, 1),
-                            0 0 0 10px rgba(59, 130, 246, 0.4);
+                        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
                     }}
-                }}
-
-                @keyframes bounce-icon {{
-                    0%, 100% {{ transform: translateY(0px); }}
-                    50% {{ transform: translateY(-3px); }}
                 }}
             </style>
             """, unsafe_allow_html=True)
-
-            # Mostrar informações de debug (apenas uma vez por sessão)
-            if 'image_debug_shown' not in st.session_state:
-                st.session_state.image_debug_shown = True
-
-                with st.expander("🔍 Debug: Informações sobre a imagem"):
-                    st.info("**Locais verificados para a imagem Tilap-IA.png:**")
-                    for i, path in enumerate(possible_paths, 1):
-                        exists = "✅" if os.path.exists(path) else "❌"
-                        st.write(f"{i}. {exists} `{path}`")
-
-                    st.warning("""
-                    **💡 Para usar sua própria imagem:**
-                    1. Crie a pasta `images/` na raiz do projeto
-                    2. Adicione o arquivo `Tilap-IA.png` na pasta
-                    3. Recarregue a página
-                    """)
-
 
 def calculate_feed_conversion_rate(data):
     """Calcula a Taxa de Conversão Alimentar (TCA)"""
