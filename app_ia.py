@@ -38,7 +38,7 @@ except ImportError:
     APP_LAYOUT = "wide"
     DEFAULT_CONFIDENCE_LEVEL = 0.95
     DEFAULT_CORRECTION_FACTOR = 1.0
-    PROFESSOR_ASSISTANT_URL = "https://github.com/ffastIA/UX_BIA/blob/main/images/Tilap-IA.png"
+    PROFESSOR_ASSISTANT_URL = "https://ffastia-bia-rag-bia-chain-mem-vgkrw6.streamlit.app/"
 
 # Configuração da página
 st.set_page_config(
@@ -208,7 +208,7 @@ def add_consultor_icon():
                     this.style.transform='scale(1) rotate(0deg)'; 
                     this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.3)';
                 ">
-                    🐟🤓
+                    🤓
                 </div>
             </a>
             <div style="text-align: left;">
@@ -217,7 +217,7 @@ def add_consultor_icon():
                     margin: 0; 
                     font-size: 1.1rem;
                     font-weight: 600;
-                ">🤖 Prof. Tilap-IA Disponível</h4>
+                ">🤖 Dr. Tilap-IA Disponível</h4>
                 <p style="
                     color: #64748b; 
                     margin: 0.2rem 0 0 0; 
